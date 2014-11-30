@@ -5,7 +5,7 @@ Created on Jun 3, 2014
 '''
 import numpy as np
 
-class PhysicalConstants(object):
+class PhysicalConstantsSI(object):
     h = 6.626068e-34# m**2 * kg / s
     hbar = 1.05457148e-34# m**2 * kg / s
     amu = 1.66053886e-27# kg
@@ -19,7 +19,7 @@ class PhysicalConstants(object):
     epsilon0 = 8.854187817e-12# farads/meter vacuum permittivity
 
 
-class LithiumSix(object):
+class LithiumSixSI(object):
     mass = 9.96323318e-27# kg
 
     wavelength_d1 = 670.992421e-9# m

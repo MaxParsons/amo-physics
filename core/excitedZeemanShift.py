@@ -19,10 +19,10 @@ for J in np.arange(Hhf.momenta[0] + Hhf.momenta[1], -.1, -1):
             I = Hhf.momenta[2]
             C = F * (F + 1) - J * (J + 1) - I * (I + 1)
             if J == 0.5:
-                Hhf.representation[Hhf.FtoIndex(J, I, F, mF), Hhf.FtoIndex(J, I, F, mF)] = 0.5 * C * phys.LithiumSix.mag_dipole_POneHalf  # Hz
+                Hhf.representation[Hhf.FtoIndex(J, I, F, mF), Hhf.FtoIndex(J, I, F, mF)] = 0.5 * C * phys.LithiumSixSI.mag_dipole_POneHalf  # Hz
             else:
-                Hhf.representation[Hhf.FtoIndex(J, I, F, mF), Hhf.FtoIndex(J, I, F, mF)] = 0.5 * C * phys.LithiumSix.mag_dipole_PThreeHalf + \
-                0.375 * phys.LithiumSix.elec_quadrupole_PThreeHalf * C * (C + 1) / (I * (2 * I - 1) * J * (2 * J - 1))  # Hz
+                Hhf.representation[Hhf.FtoIndex(J, I, F, mF), Hhf.FtoIndex(J, I, F, mF)] = 0.5 * C * phys.LithiumSixSI.mag_dipole_PThreeHalf + \
+                0.375 * phys.LithiumSixSI.elec_quadrupole_PThreeHalf * C * (C + 1) / (I * (2 * I - 1) * J * (2 * J - 1))  # Hz
 
 '''
 Construct the fine structure Hamiltonian
@@ -32,7 +32,7 @@ for J in np.arange(Hfs.momenta[0] + Hfs.momenta[1], -.1, -1):
     for mJ in np.arange(-J, J + .1, 1):
         for mI in np.arange(-Hfs.momenta[2], Hfs.momenta[2] + .1, 1):
             if J == 1.5:
-                Hfs.representation[Hfs.J_ItoIndex(J, mJ, Hfs.momenta[2], mI), Hfs.J_ItoIndex(J, mJ, Hfs.momenta[2], mI)] = phys.LithiumSix.fine_structure
+                Hfs.representation[Hfs.J_ItoIndex(J, mJ, Hfs.momenta[2], mI), Hfs.J_ItoIndex(J, mJ, Hfs.momenta[2], mI)] = phys.LithiumSixSI.fine_structure
             else:
                 Hfs.representation[Hfs.J_ItoIndex(J, mJ, Hfs.momenta[2], mI), Hfs.J_ItoIndex(J, mJ, Hfs.momenta[2], mI)] = 0.0
 Hfs.ChangeOfBasis('F')
@@ -47,7 +47,7 @@ for mS in np.arange(-Hz.momenta[1], Hz.momenta[1] + .1, 1):
     for mI in np.arange(-Hz.momenta[2], Hz.momenta[2] + .1, 1):
         for mL in np.arange(-Hz.momenta[0], Hz.momenta[0] + .1, 1):
             Hz.representation[Hhf.L_S_ItoIndex(Hz.momenta[0], mL, Hz.momenta[1], mS, Hz.momenta[2], mI), Hhf.L_S_ItoIndex(Hz.momenta[0], mL, Hz.momenta[1], mS, Hz.momenta[2], mI)]\
- = phys.PhysicalConstants.gelectron * phys.PhysicalConstants.uB * mS + phys.PhysicalConstants.uB * mL + phys.PhysicalConstants.uN * mI
+ = phys.PhysicalConstantsSI.gelectron * phys.PhysicalConstantsSI.uB * mS + phys.PhysicalConstantsSI.uB * mL + phys.PhysicalConstantsSI.uN * mI
 Hz.ChangeOfBasis('F')
 
 B = np.arange(0, 2, .1)

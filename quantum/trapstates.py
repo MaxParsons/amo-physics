@@ -11,7 +11,7 @@ import scipy.linalg
 from scipy.optimize import brentq
 import matplotlib.pylab as plt
 
-pc = core.physicalconstants.PhysicalConstants
+pc = core.physicalconstants.PhysicalConstantsSI
 
 class Trap1D(object):
     def __init__(self, potential, mass, n_states, n_points, x_range, statistics='fermi', degeneracy=0.1, npol=200):
