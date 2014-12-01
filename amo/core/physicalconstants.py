@@ -42,6 +42,6 @@ class LithiumSixSI(object):
     def scattering_length(self, field, state0, state1):# FIXME: Scattering lengths for lithium
         pass
 
-class Rubidium87(object):
+class Rubidium87SI(object):
     mass = 1.44316077e-25# kg
     
