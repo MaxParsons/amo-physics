@@ -10,6 +10,8 @@ from amo.core import physicalconstants
 from liexperiment.traps import harmonicoscillator3d
 c = physicalconstants.PhysicalConstantsSI
 
+Er = c.h * 75.0e3
+
 class RamanSimulation(object):
     def __init__(self):
         # SI units everywhere
@@ -135,15 +137,14 @@ class RamanSimulation(object):
         self.set_mean_phonon_number()
         if isPlot:
             r.result.plot()
-        
-if __name__ == "__main__":
-    Er = c.h * 75.0e3
-    sim = RamanSimulation()
-    average_energy = 3.0 * Er
-    sim.f_trap = 1.0e6  # trap frequency
-    sim.cutoff_state = 8.0  # first state to tunnel, indexed from 0
-    trap_frequencies = np.array([sim.f_trap, 950.0e3, 1300.0e3])
-    cutoffs = np.array([sim._cutoff_state, 7, 11])   
+
+def set_default_simulation_parameters(sim):
+    sim.f_trap = 0.65e6  # trap frequency
+    sim.f_recoil = 75e3
+    sim.f_anharmonicity = 3.5e3
+    sim.cutoff_state = 15.0  # first state to tunnel, indexed from 0
+    trap_frequencies = np.array([sim.f_trap, 1000.0e3, 1300.0e3])
+    cutoffs = np.array([sim._cutoff_state, 8, 11])   
     sim.detuning = -sim.f_trap
     sim.pi_time = 2.0e-6  # raman carrier pi-time
     sim.pump_time = 10.0e-6  # pumping time
@@ -151,35 +152,73 @@ if __name__ == "__main__":
     sim.duration = 0.2e-3  # how long is the raman cooling
     sim.numsteps = 100  # how many points for the simulation
     
+        
+if __name__ == "__main__":
     
-    lat = harmonicoscillator3d.harmonicoscillator3d(trap_frequencies, cutoffs)
-    print lat.cutoffs[0]
-    print sim.cutoff_state
-    print sim.init_populations.shape
-    temperature = lat.temperature(average_energy)
-    
-    sim.init_populations[0:-1] = lat.populations_sum_over_all_but_first_frequency(temperature)
-    sim.simulate_cooling(isPlot=True)
+
     
     figmean, axmean = plt.subplots(1, 1)
     figgnd, axgnd = plt.subplots(1, 1)
     figlost, axlost = plt.subplots(1, 1)
     
-    axmean.plot(sim.times, sim.mean_phonon_number, marker = "o", linestyle = "None")
-    axmean.set_title("Mean phonon number vs. Cooling Time")
-    axmean.set_ylabel("Mean phonon number")
-    axmean.set_xlabel("Cooling time (s)")
+    def detuningscan():
+        sim = RamanSimulation()
+        average_energy = 3.0 * Er
+        detunings = np.linspace(-1.5*sim.f_trap, 0.5*sim.f_trap, 20)
+        print detunings.shape
+        sample_idx = sim.numsteps - 1
+        for delta in detunings:
+            sim.detuning = delta
+            lat = harmonicoscillator3d.harmonicoscillator3d(trap_frequencies, cutoffs)
+            temperature = lat.temperature(average_energy)
+            sim.init_populations[0:-1] = lat.populations_sum_over_all_but_first_frequency(temperature)
+            sim.simulate_cooling(isPlot=False)
+            
+            axmean.plot(delta/1.0e3, sim.mean_phonon_number[sample_idx], marker = "o", linestyle = "None", color = 'b')
+            print sim.mean_phonon_number[sample_idx]
+            axmean.set_title("Mean phonon number vs. Detuning")
+            axmean.set_ylabel("Mean phonon number")
+            axmean.set_xlabel("Detuning from carrier (kHz)")
+            
+            axgnd.plot(delta/1.0e3, sim.populations[sample_idx, 0], marker = "o", linestyle = "None", color = 'b')
+            axgnd.set_title("Ground state fraction vs. Detuning")
+            axgnd.set_ylabel("Ground state fraction")
+            axgnd.set_xlabel("Detuning from carrier (kHz)")
+            
+            axlost.plot(delta/1.0e3, sim.populations[sample_idx, sim._cutoff_state], marker = "o", linestyle = "None", color = 'b')
+            axlost.set_title("Fraction lost vs. Detuning")
+            axlost.set_ylabel("Fraction lost")
+            axlost.set_xlabel("Detuning from carrier (kHz)")
+            
+    def durationscan():
+        sim = RamanSimulation()
+        average_energy = 3.0 * Er
+        durations = np.linspace(0.05*sim.pi_time, 50*sim.pi_time, 20)
+        sample_idx = sim.numsteps - 1
+        for duration in durations:
+            sim.duration = duration
+            lat = harmonicoscillator3d.harmonicoscillator3d(trap_frequencies, cutoffs)
+            temperature = lat.temperature(average_energy)
+            sim.init_populations[0:-1] = lat.populations_sum_over_all_but_first_frequency(temperature)
+            sim.simulate_cooling(isPlot=False)
+            
+            axmean.plot(duration*1.0e6, sim.mean_phonon_number[sample_idx], marker = "o", linestyle = "None", color = 'b')
+            print sim.mean_phonon_number[sample_idx]
+            axmean.set_title("duration vs. Detuning")
+            axmean.set_ylabel("Mean phonon number")
+            axmean.set_xlabel("Duration (us)")
+            
+            axgnd.plot(duration*1.0e6, sim.populations[sample_idx, 0], marker = "o", linestyle = "None", color = 'b')
+            axgnd.set_title("Ground state fraction vs. Detuning")
+            axgnd.set_ylabel("Ground state fraction")
+            axgnd.set_xlabel("Duration (us)")
+            
+            axlost.plot(duration*1.0e6, sim.populations[sample_idx, sim._cutoff_state], marker = "o", linestyle = "None", color = 'b')
+            axlost.set_title("Fraction lost vs. Duration")
+            axlost.set_ylabel("Fraction lost")
+            axlost.set_xlabel("Duration (us)")
     
-    axgnd.plot(sim.times, sim.populations[:, 0], marker = "o", linestyle = "None")
-    axgnd.set_title("Ground state fraction vs. Cooling Time")
-    axgnd.set_ylabel("Ground state fraction")
-    axgnd.set_xlabel("Cooling time (s)")
-    
-    axlost.plot(sim.times, sim.populations[:, sim._cutoff_state], marker = "o", linestyle = "None")
-    axlost.set_title("Fraction lost vs. Cooling Time")
-    axlost.set_ylabel("Fraction lost")
-    axlost.set_xlabel("Cooling time (s)")
-    
+    durationscan()
     plt.show()
     
     
