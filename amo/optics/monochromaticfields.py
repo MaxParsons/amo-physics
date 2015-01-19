@@ -25,24 +25,29 @@ class MonochromaticField(object):
     
     def get_intensity_time_averaged(self, r, pol=None):
         if pol is None:
-            return 0.5 * c.epsilon0 * c.c * np.square(np.absolute(np.linalg.norm(self.field(self, r), axis=1)))
+            return 0.5 * c.epsilon0 * c.c * np.square(np.absolute(np.linalg.norm(self.field(r), axis=1)))
         else:
             return 0.5 * c.epsilon0 * c.c * np.square(np.absolute(np.dot(self.field(r), np.conjugate(pol))))
 
 class GaussianBeam(MonochromaticField):
-    def __init__(self, wavelength, waist, polarization=np.array([1, 0]), e0=1, r0=np.array([0, 0, 0]), theta=0, phi=0):
+    def __init__(self, wavelength, waist, polarization=np.array([1, 0]), e0=1, r0=np.array([0, 0, 0]), polar_angle=0, azimuthal_angle=0):
+        """
+        __init__(wavelength, waist, polarization=np.array([1, 0]), e0=1, r0=np.array([0, 0, 0]), polar_angle=0, azimuthal_angle=0)
+        all units SI, angles in degrees
+        
+        """
         self.wavelength = wavelength
         self.k = 1.0 / wavelength
         self.waist = waist
         self.r0 = r0
         self.e0 = e0
         self.polarization = polarization / np.linalg.norm(polarization)
-        self.theta = theta
-        self.phi = phi
+        self.theta = polar_angle
+        self.phi = azimuthal_angle
         self.rayleigh_range = np.pi * waist ** 2 / wavelength
         
     def field(self, r, t=0):
-        r = rot.Ry(rot.Rz(r, -self.phi), -self.theta)
+        r = rot.Ry(rot.Rz(r, -np.pi * self.phi / 180.0), -np.pi * self.theta / 180.0)
         rsquared = np.sum(np.square(np.abs(r)), axis= -1)
         z = r[:, 2]
         w = self.waist * np.sqrt(1 + np.square(z / self.rayleigh_range))
@@ -54,7 +59,7 @@ class GaussianBeam(MonochromaticField):
 if __name__ == '__main__':
     beam = GaussianBeam(1064e-9, 80e-6)
     xvals = np.matrix([[0, 0, 0], [0, 0, 80e-6]])
-    print beam.get_phase(xvals)
+    print beam.get_intensity_time_averaged(xvals)
         
         
         
