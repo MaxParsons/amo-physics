@@ -5,6 +5,7 @@ Created on Dec 12, 2014
 '''
 import amo.core.physicalconstants
 import numpy as np
+import mpmath
 c = amo.core.physicalconstants.PhysicalConstantsSI
 li = amo.core.physicalconstants.LithiumSixSI
 

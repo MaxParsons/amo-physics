@@ -197,7 +197,7 @@ if __name__ == "__main__":
         sample_idx = sim.numsteps - 1
         for duration in durations:
             sim.duration = duration
-            lat = harmonicoscillator3d.harmonicoscillator3d(trap_frequencies, cutoffs)
+            lat = harmonicoscillator3d.harmonicoscillator3d(durations, cutoffs)
             temperature = lat.temperature(average_energy)
             sim.init_populations[0:-1] = lat.populations_sum_over_all_but_first_frequency(temperature)
             sim.simulate_cooling(isPlot=False)
