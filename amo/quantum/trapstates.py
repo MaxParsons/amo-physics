@@ -4,27 +4,26 @@ Created on Jun 4, 2014
 @author: Max
 '''
 import numpy as np
-import core.physicalconstants
-import core.miscellaneous
-misc = core.miscellaneous.miscellaneous
+import amo.core.physicalconstants
+import amo.core.utilities
+misc = amo.core.utilities.simulations
 import scipy.linalg
 from scipy.optimize import brentq
 import matplotlib.pylab as plt
 
-pc = core.physicalconstants.PhysicalConstantsSI
+pc = amo.core.physicalconstants.PhysicalConstantsSI
 
 class Trap1D(object):
-    def __init__(self, potential, mass, n_states, n_points, x_range, statistics='fermi', degeneracy=0.1, npol=200):
+    def __init__(self, x_values, potential, mass, n_states, statistics='fermi', degeneracy=0.1, npol=200):
         self.mass = mass
         self.n_states = n_states
-        self.x_values = np.linspace(-x_range, x_range, n_points)
-        self._potential_lambda = potential
-        self._potential_vec = np.vectorize(potential)
-        self.potential = self._potential_vec(self.x_values)
+        self.potential = potential
         self.statistics = statistics
         self.degeneracy = degeneracy
         self.npol = npol
+        self.x_values = x_values
         self.compute_eigenstates()
+        
         
     def compute_eigenstates(self):# FIXME: automatic computation of cutoffs for eigenstate calculation
         misc.talk('Diaganolizing trap hamiltonian...')
@@ -32,9 +31,11 @@ class Trap1D(object):
         h1 = -(pc.hbar ** 2 / (2.0 * self.mass)) * np.ones_like(self.x_values) / (self.x_values[1] - self.x_values[0]) ** 2
         h_band = np.array([h0, h1])
         self.energies, self.eigenStates = scipy.linalg.eig_banded(h_band, lower=True)
+        print self.energies
         idx = self.energies.argsort()
         self.energies = self.energies[idx]
         self.eigenStates = self.eigenStates[:, idx]
+        print self.energies
         self.energies = self.energies[0:self.n_states]
         self.eigenStates = self.eigenStates[:, 0:self.n_states]
         self.normalize_states()
@@ -124,20 +125,25 @@ class Trap1D(object):
         plt.plot(des * energyRescale, occupations * np.abs(trans_els), '.')
         misc.talk('Done')
             
-    def plot_eigenstates(self, skip=False):
+    def plot_eigenstates(self, skip=False, is_overlay_potential=True, energy_rescale=None, x_rescale=None, wavefunction_scale=0.3):
         plt.xlabel('Distance (um)')
-        plt.ylabel('Energy (kHz) / Re(wavefunction)')
+        plt.ylabel('Energy (MHz), Re(wavefunction)')
         plt.title('Trap Eigenstates')
-        energyRescale = 1 / (pc.h * 1.e3)
-        xRescale = 1. / (1.e-6)
+        if energy_rescale is None:
+            energy_rescale = 1.0
+        if x_rescale is None:
+            x_rescale = 1.0
         if not skip:
             for i in range(0, self.n_states):
-                plt.plot(self.x_values * xRescale, np.real(self.eigenStates[:, i]) * (10 * energyRescale / self.n_states * (np.max(self.energies) - np.min(self.energies)) / np.max(np.abs(self.eigenStates[:, i])))
-                         + np.abs(self.energies[i]) * energyRescale)
+                plt.plot(self.x_values * x_rescale, np.real(self.eigenStates[:, i]) * (wavefunction_scale * energy_rescale / self.n_states * (np.max(self.energies) - np.min(self.energies)) / np.max(np.abs(self.eigenStates[:, i])))
+                         + self.energies[i] * energy_rescale)
         else:
             for i in range(0, self.n_states, 10):
-                plt.plot(self.x_values * xRescale, np.real(self.eigenStates[:, i]) * (10 * energyRescale / self.n_states * (np.max(self.energies) - np.min(self.energies)) / np.max(np.abs(self.eigenStates[:, i])))
-                         + np.abs(self.energies[i]) * energyRescale)
+                plt.plot(self.x_values * x_rescale, np.real(self.eigenStates[:, i]) * (wavefunction_scale * energy_rescale / self.n_states * (np.max(self.energies) - np.min(self.energies)) / np.max(np.abs(self.eigenStates[:, i])))
+                         + self.energies[i] * energy_rescale)
+                
+        if is_overlay_potential:
+            plt.plot(self.x_values * x_rescale, self.potential * energy_rescale, color='k', linewidth=2.0)
             
     
     def plot_density_of_states(self):# FIXME: add density of states
