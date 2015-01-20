@@ -5,7 +5,6 @@ Created on Dec 12, 2014
 '''
 import amo.core.physicalconstants
 import numpy as np
-import mpmath
 c = amo.core.physicalconstants.PhysicalConstantsSI
 li = amo.core.physicalconstants.LithiumSixSI
 
@@ -93,7 +92,7 @@ class composite_vertical_lattice(object):
     def axial_depth(self, z):
         return -self.power_NE * self.cal.modulation_depth_per_watt_NE * np.sin(np.pi / self.cal.lattice_spacing_ax_NE * z) ** 2 \
             - self.power_NW * self.cal.modulation_depth_per_watt_NW * np.sin(np.pi / self.cal.lattice_spacing_ax_NW * z) ** 2 \
-            - self.power_NE * self.cal.modulation_depth_per_watt_Ve * np.sin(np.pi / self.cal.lattice_spacing_ax_Ve * z) ** 2
+            - self.power_Ve * self.cal.modulation_depth_per_watt_Ve * np.sin(np.pi / self.cal.lattice_spacing_ax_Ve * z) ** 2
             
     
 class lattice_modulation_depth(object):
