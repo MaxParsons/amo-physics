@@ -11,6 +11,18 @@ rot = amo.core.misc.Rotations
 c = amo.core.physicalconstants.PhysicalConstantsSI
 
 class MonochromaticField(object):
+    @classmethod
+    def from_lambda(cls, field_lambda):
+        obj = cls()
+        obj.field = field_lambda
+        return obj
+    
+    @classmethod
+    def from_combined_fields(cls, field_lambdas):
+        obj = cls()
+        obj.field = lambda r: np.sum(np.array([lamb(r) for lamb in field_lambdas]), axis=0)
+        return obj
+    
     def field(self, r, t=0):
         pass
         
@@ -30,52 +42,50 @@ class MonochromaticField(object):
             return 0.5 * c.epsilon0 * c.c * np.square(np.absolute(np.dot(self.field(r), np.conjugate(pol))))
 
 class SymmetricGaussianBeam(MonochromaticField):
-    def __init__(self, k, origin, waist, power, wavelength, polarization=np.array([1, 0])):
+    def __init__(self, theta, phi, waist, power, wavelength):
         """
         __init__(wavelength, waist, polarization=np.array([1, 0]), e0=1, r0=np.array([0, 0, 0]), polar_angle=0, azimuthal_angle=0)
         all units SI, angles in degrees
         
+        @param theta: Propagation angle from z-axis
+        @param phi: Propagation angle counterclockwise from x-axis
+        @param origin: location of waist
+
         """
         self.wavelength = wavelength
-        self.knorm = k / np.linalg.norm(k)
+        self.wavevector = 2.0 * np.pi / wavelength
         self.waist = waist
         self.power = power
-        self.origin = origin
-        self.polarization = polarization / np.linalg.norm(polarization)
+        # self.origin = origin FIXME
+        self.phi = np.pi * phi / 180.0
+        self.theta = np.pi * phi / 180.0
+        self.e0 = 1.0
+        
         
     @property
     def rayleigh_range(self):
-        np.pi * self.waist ** 2 / self.wavelength
+        return np.pi * self.waist ** 2 / self.wavelength
         
-    def field(self, x, y, z, t=0):
-        x, y, z = self.rotated_coordinates(x, y, z)
-        rsquared = np.square(x) + np.square(y)
-        w = self.waist * np.sqrt(1 + np.square(z / self.rayleigh_range))
-        rad_inv = np.multiply(z, np.power(np.square(z) + np.square(self.rayleigh_range), -1))
-        return np.multiply(np.divide(self.e0, w), np.exp(np.divide(-rsquared, np.square(w))) - 1.j * (self.k * z + np.multiply(rsquared, np.square(rad_inv)) + np.arctan(z / self.rayleigh_range)))
-    
-    def rotated_coordinates(self, x, y, z):
-        phi = np.arctan(self.knorm[1] / self.knorm[0])
-        theta = np.arccos(self.knorm[2])
-        r = np.array([x, y, z])
-        print r.shape
-        print r
-        rrot = np.dot(np.dot(rot.Ry(-phi), rot.Rz(-theta)), r)
+    def field(self, r):
+        z = r[2] * np.cos(self.theta) - r[0] * np.sin(self.phi)
+        rsquared = r[1] ** 2 + (r[0] * np.cos(self.theta) + r[2] * np.sin(self.theta)) ** 2
+        zr = self.rayleigh_range
+        w = self.waist * np.sqrt(1 + (z / zr) ** 2)
+        rad = z * (1 + (zr / z) ** 2)
+        field = self.e0 * self.waist / w * np.exp(-rsquared / w ** 2 - 1.j * self.wavevector * z - 
+                                                  1.j * self.wavevector * rsquared / (2. * rad) + 
+                                                  1.j * np.arctan(z / zr))
+        return field
         
-        return rrot[0], rrot[1], rrot[2]
+    def get_field_lambda(self):
+        lbda = lambda r: self.field(r)
+        return lbda
     
 if __name__ == '__main__':
-    k = np.array([1, 0, 0])
-    origin = np.array([0, 0, 0])
-    waist = 50.0e-6
-    power = 1.0e-3
-    wavelength = 1.064e-6
-    beam = SymmetricGaussianBeam(k, origin, waist, power, wavelength)
-    xaxis = np.linspace(0, 1.0, 5)
-    yaxis = np.linspace(0, 1.0, 5)
-    zaxis = np.linspace(0, 1.0, 5)
-    x, y, z = np.meshgrid(xaxis, yaxis, zaxis)
-    print beam.rotated_coordinates(x, y, z)
+    dimp = SymmetricGaussianBeam(0.0, 0.0, 50.0e-6, 0.0, 1064.0e-6)
+    dimp_lambda = dimp.get_field_lambda()
+    r = [0, 0, 40e-6]
+    print np.abs(dimp_lambda(r)) ** 2
         
         
         
