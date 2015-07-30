@@ -4,6 +4,7 @@ Created on Jan 20, 2015
 @author: Max
 '''
 import amo.core.utilities as util
+from amo.core.fields import ComplexScalarField2D as field
 import numpy as np
 import collections
 import os.path

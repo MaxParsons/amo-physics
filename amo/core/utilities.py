@@ -5,6 +5,8 @@ Created on Jan 19, 2015
 '''
 import numpy as np
 
+
+@staticmethod
 def cartesian(arrays, out=None):
     """
     Generate a cartesian product of input arrays.
@@ -54,3 +56,6 @@ def cartesian(arrays, out=None):
         for j in xrange(1, arrays[0].size):
             out[j * m:(j + 1) * m, 1:] = out[0:m, 1:]
     return out
+
+
+    
