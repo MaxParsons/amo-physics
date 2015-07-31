@@ -13,13 +13,14 @@ c = amo.core.physicalconstants.PhysicalConstantsSI
 
 class MonochromaticField(object):
     @classmethod
-    def from_lambda(cls, field_lambda):
-        obj = cls()
-        obj.field = field_lambda
-        return obj
-    
-    @classmethod
-    def from_combined_fields(cls, field_lambdas):
+    def from_lambda(cls, field_lambdas):
+        """
+        Initializer to combine interfering fields
+        
+        @param field_lambdas: A list of lambda functions to combine
+        @return: Instance of Monochromatic field generated from field_lambdas
+        """
+        
         obj = cls()
         obj.field = lambda r: np.sum(np.array([lamb(r) for lamb in field_lambdas]), axis=0)
         return obj
@@ -87,6 +88,8 @@ class SymmetricGaussianBeam(MonochromaticField):
         
         @param theta: Propagation angle from z-axis in degrees
         @param phi: Propagation angle counterclockwise from x-axis in degrees
+        @param waist: beam waist
+        @param power: beam power
         @param origin: location of waist
 
         """
@@ -96,7 +99,7 @@ class SymmetricGaussianBeam(MonochromaticField):
         self.power = power
         # self.origin = origin FIXME
         self.phi = np.pi * phi / 180.0
-        self.theta = np.pi * phi / 180.0
+        self.theta = np.pi * theta / 180.0
         self.e0 = 1.0
         
         
@@ -105,8 +108,8 @@ class SymmetricGaussianBeam(MonochromaticField):
         return np.pi * self.waist ** 2 / self.wavelength
         
     def field(self, x, y, z):
-        znew = z * np.cos(self.theta) - x * np.sin(self.theta)
-        rsquared = y ** 2 + (x * np.cos(self.theta) + z * np.sin(self.theta)) ** 2
+        znew = z * np.cos(self.theta) + x * np.sin(self.theta)
+        rsquared = y ** 2 + (x * np.cos(self.theta) - z * np.sin(self.theta)) ** 2
         zr = self.rayleigh_range
         w = self.waist * np.sqrt(1 + (znew / zr) ** 2)
         rad = znew * (1 + (zr / znew) ** 2)
@@ -146,13 +149,14 @@ def func(x, y):
 def test():
     wavelength = 1.064e-6
     waist = 2.0e-6
-    theta = 45.0
-    phi = 0.0
+    theta = 90.0
+    phi = 90.0
     pwave = SymmetricGaussianBeam(theta, phi, waist, 1.0, wavelength)
-    pwave_field = pwave.get_field_plane([0, 1, 0], np.array([[-20e-6, 20e-6], [-20e-6, 20e-6]]), 0, num1d=500)
+    pwave_field = pwave.get_field_plane([0, 1, 0], np.array([[-20e-6, 20e-6], [-20e-6, 20e-6]]), 1e-6, num1d=500)
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
     pwave_field.plot_color_phase(ax)
+    print pwave.phi
     plt.show()
     
 if __name__ == '__main__':
