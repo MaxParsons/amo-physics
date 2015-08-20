@@ -59,7 +59,7 @@ class MonochromaticField(object):
     
     def get_intensity_time_averaged(self, x, y, z, pol=None):
         if pol is None:
-            return 0.5 * c.epsilon0 * c.c * np.square(np.absolute(np.linalg.norm(self.field(x, y, z), axis=1)))
+            return 0.5 * c.epsilon0 * c.c * np.square(np.absolute(self.field(x, y, z)))
         else:
             return 0.5 * c.epsilon0 * c.c * np.square(np.absolute(np.dot(self.field(x, y, z), np.conjugate(pol))))
 
@@ -190,21 +190,21 @@ class Lattice2d(MonochromaticField):
 
 def test():
     wavelength = 1.064e-6
-    waist = 80.0e-6
+    waist = 1.0# 50.0e-6
     theta = 70.0
     phi = 0.0
-    offset = [0.e-6, 0., 0.e-6]
+    offset = [0.e-6, 0.e-6, 0.e-6]
     power = 1.0
-    extents_line = [-20e-6, 20e-6]
-    center_line = [0., 0., 1.e-6]
-    direction = [1, 0 , 0]
-    # pwave = SymmetricGaussianBeam(theta, phi, waist, 1.0, wavelength, offset=offset)
-    pwave = Lattice2d(theta, phi, waist, power, wavelength, offset=offset, phase0=0.0)
+    extents_line = [-20, 20]
+    center_line = [0., 0., 0.e-6]
+    direction = [0, 0 , 1]
+    pwave = SymmetricGaussianBeam(theta, phi, waist, 1.0, wavelength, offset=offset)
+    # pwave = Lattice2d(theta, phi, waist, power, wavelength, offset=offset, phase0=0.0)
     pwave_field = pwave.get_field_plane([0, 1, 0], np.array([[-20e-6, 20e-6], [0.0, 20e-6]]), 0e-6, num1d=500)
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
     # pwave_field.plot_amplitude(ax)
-    pwave.plot_field_line_phase(ax, direction, center_line, extents_line, num1d=5000)
+    pwave.plot_field_line_intensity(ax, direction, center_line, extents_line, num1d=5000)
     plt.show()
     
 if __name__ == '__main__':
