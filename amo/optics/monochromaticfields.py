@@ -152,7 +152,7 @@ class Lattice1d(MonochromaticField):
         return self.beam0.field(x, y, z) + self.beam1.field(x, y, z)
     
 class Lattice2d(MonochromaticField):
-    def __init__(self, theta, phi, waist, power, wavelength, offset=[0.0, 0.0, 0.0], phase0=0.0, phase1=0.0):
+    def __init__(self, theta, phi, waist, power, wavelength, offset=[0.0, 0.0, 0.0], phase=0.0, t_retro=1.0):
         """
         __init__(wavelength, waist, polarization=np.array([1, 0]), e0=1, r0=np.array([0, 0, 0]), polar_angle=0, azimuthal_angle=0)
         all units SI, angles in degrees
@@ -171,20 +171,20 @@ class Lattice2d(MonochromaticField):
         self.phi = np.pi * phi / 180.0
         self.theta = np.pi * theta / 180.0
         self.offset = offset
-        self.phase0 = np.pi * phase0 / 180.0
-        self.phase1 = np.pi * phase1 / 180.0
+        self.phase = np.pi * phase / 180.0
+        self.t_retro = t_retro
         
         self.beam0 = SymmetricGaussianBeam(theta, phi, self.waist, \
-                                      self.power, self.wavelength, offset=self.offset, phase=phase0)
+                                      self.power, self.wavelength, offset=self.offset, phase=0.0)
         self.beam1 = SymmetricGaussianBeam(180.0 - theta, phi, self.waist, \
-                                      self.power, self.wavelength, offset=self.offset, phase=phase0 + 180.0)
+                                      self.power, self.wavelength, offset=self.offset, phase=0.0 + 180.0)
         self.beam2 = SymmetricGaussianBeam(theta, phi + 180, self.waist, \
-                                      self.power, self.wavelength, offset=self.offset, phase=phase1)
+                                      self.power, self.wavelength, offset=self.offset, phase=phase)
         self.beam3 = SymmetricGaussianBeam(180.0 - theta, phi + 180, self.waist, \
-                                      self.power, self.wavelength, offset=self.offset, phase=phase1 + 180.0)
+                                      self.power, self.wavelength, offset=self.offset, phase=phase + 180.0)
         
     def field(self, x, y, z):
-        return self.beam0.field(x, y, z) + self.beam1.field(x, y, z) + self.beam2.field(x, y, z) + self.beam3.field(x, y, z)
+        return self.beam0.field(x, y, z) + self.beam1.field(x, y, z) + self.t_retro * self.beam2.field(x, y, z) + self.t_retro * self.beam3.field(x, y, z)
         
 
 
