@@ -3,6 +3,7 @@
 	<name>amophysics</name>
 	<comment></comment>
 	<projects>
+		<project>plastia</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

@@ -16,7 +16,6 @@ class harmonicoscillator3d(object):
         self.labels = labels
         self.zero_point_energies = 0.5 * c.h * frequencies
         
-        
     def partition_function(self, temperature):
         beta = (c.kb * temperature) ** (-1)
         return np.product(np.exp(-beta * c.h * self.frequencies / 2.0) * \
