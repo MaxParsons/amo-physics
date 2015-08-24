@@ -6,6 +6,7 @@ Created on Jul 30, 2015
 import numpy as np
 from colorsys import hls_to_rgb
 import matplotlib.pyplot as plt
+from amo.core.physicalconstants import PhysicalConstantsSI as c
 
 class ComplexScalarField2D(object):
     def __init__(self, coords, values):
@@ -19,6 +20,10 @@ class ComplexScalarField2D(object):
     @property
     def amplitude(self):
         return np.absolute(self.values)
+    
+    @property
+    def optical_intensity_time_averaged(self):
+        return 0.5 * c.epsilon0 * c.c * np.square(self.amplitude)
     
     @staticmethod
     def colorize(z):
